@@ -1,0 +1,12 @@
+.Rprofile
+.Rproj.user
+.Rhistory
+.RData
+inst/doc
+.idea
+*.*~
+.R_Cache
+*.Rproj
+packrat/lib*/
+packrat/src/
+*.log

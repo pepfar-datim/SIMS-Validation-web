@@ -163,7 +163,7 @@ shinyServer(function(input, output, session) {
   #SIMS Datasets
   dataSets <- c("VP0uG6tzB5l", "lvfFcexh1nB")
   #Output Dir
-  output_dir <- "/Users/bdennis/Documents/ICF/development/Explore/upload/"
+  output_dir <- tempdir()
   user_input <- reactiveValues(authenticated = FALSE, 
                                status = "",
                                d2_session = NULL,
@@ -200,7 +200,7 @@ shinyServer(function(input, output, session) {
   #   username and password text fields, login button
   output$uiLogin <- renderUI({
     wellPanel(
-      #fluidRow(img(src='pepfar.png', align = "center")),
+        fluidRow(img(src='pepfar.png', align = "center")),
         fluidRow(h4("Welcome to the SIMS Validation tool")
       ),
       fluidRow(

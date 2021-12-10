@@ -10,7 +10,6 @@ install_github("pepfar-datim/datim-validation")
 require(SIMS4Validation)
 require(datimvalidation)
 
-
 shinyServer(function(input, output, session) {
   
   ready <- reactiveValues(ok = FALSE)
@@ -107,7 +106,6 @@ shinyServer(function(input, output, session) {
                         )),
             selectInput("isoPeriod", "Iso Period", 
                         c(
-                          "2020Q4" = "2020Q4",
                           "2021Q1" = "2021Q1",
                           "2021Q2" = "2021Q2",
                           "2021Q3" = "2021Q3",
@@ -116,7 +114,9 @@ shinyServer(function(input, output, session) {
                           "2022Q2" = "2022Q2",
                           "2022Q3" = "2022Q3",
                           "2022Q4" = "2022Q4"
-                        )),
+                        ),
+                        selected = "2021Q4"
+                        ),
             selectInput(
               "de_scheme",
               "Data Element ID scheme:",
@@ -226,6 +226,7 @@ shinyServer(function(input, output, session) {
     
     messages<-list()
     vr_results<-list()
+    vr_normalized<-list()
     has_error<-FALSE
     
     withProgress(message = 'Validating file', value = 0,{
@@ -477,8 +478,8 @@ shinyServer(function(input, output, session) {
     #incomplete_assessments <- checkCoverSheetCompleteness(data_dictionary,path)
     # write out validation summary
     write.table(as.data.frame(file_summary), file = paste0(folder, filename, "_summary.txt"))
-    validation$filesummary <- as.data.frame(file_summary)
-    
+    validation$filesummary <-file_summary
+    print(file_summary)
     # write out normalized data - data has periods shifter for overlapping assessments, and has metadata in UID format. In case of any overlapping assessments in the input file, normalized file should be used for import into DATIM
     write.csv(d2[, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value", "storedby", "timestamp", "comment")], paste0(folder, filename, "_normalized.csv"), row.names=FALSE, na="")
     
@@ -557,7 +558,6 @@ shinyServer(function(input, output, session) {
         
         validation$invalidcee <- inValidCEE
         messages <- append(paste(NROW(inValidCEE), " Invalid CEE found"), messages)
-        has_error<-TRUE
       }
       else
       {
@@ -577,21 +577,21 @@ shinyServer(function(input, output, session) {
       shinyjs::reset("importdatafile")
       disableUI()
       
-      if (inherits(dcatch, "list")) {
-        messages <- append( "ERROR! : There were errors while parsing the file. Please check that you have provided the correct paramaters!", messages)
-        messages <- append( d, messages)
-        return(NULL)
-        has_error<-TRUE
-      }
+      #if (inherits(dcatch, "list")) {
+      #  messages <- append( "ERROR! : There were errors while parsing the file. Please check that you have provided the correct paramaters!", messages)
+      #  messages <- append( d, messages)
+      #  return(NULL)
+      #  has_error<-TRUE
+      #}
       
     
     })
-    if (has_error) {
-      shinyjs::show("downloadDataValidation")
-      shinyjs::show("downloadDataNormalized")
-    }
     
-    list(data=d,messages=messages,validation=validation,has_error=has_error)
+    #Show download file options
+    shinyjs::show("downloadDataValidation")
+    shinyjs::show("downloadDataNormalized")
+    
+    list(data=d,messages=messages,validation=validation,normalized=normalized,has_error=has_error)
   }
   
   validation_results <- reactive({ validate() })
@@ -609,8 +609,8 @@ shinyServer(function(input, output, session) {
     filename = "sims_normalized_results.xlsx",
     content = function(file) {
       
-      vr_results <- validation_results() %>% purrr::pluck(.,"normalized")
-      openxlsx::write.xlsx(vr_results, file = file)
+      vr_normalized <- validation_results() %>% purrr::pluck(.,"normalized")
+      openxlsx::write.xlsx(vr_normalized, file = file)
     }
   )
   
@@ -626,12 +626,14 @@ shinyServer(function(input, output, session) {
     }
     
     if ( inherits(vr,"error") ) {
-      return( paste0("ERROR! ",vr$message) )
+      return( paste0("ERROR! ",vr$messages) )
       
     } else {
       
       messages<-vr %>%   
         purrr::pluck(., "messages")
+      
+      print(messages)
       
       if (!is.null(messages))  {
         lapply(messages, function(x)

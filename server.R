@@ -61,7 +61,50 @@ shinyServer(function(input, output, session) {
     shinyjs::enable("header")
   }
   
+  getIsoPeriodActiveQuarters= function() {
+    currentdate <- as.Date(Sys.Date(), '%d/%m/%Y')
+    year <- as.numeric(format(currentdate,'%Y'))
+    month <- as.numeric(format(currentdate,'%m'))
+    day <- as.numeric(format(currentdate,'%d'))
+    
+    if(month>=1 && month <=3)
+    {
+      quarter <- paste0(year-1, "Q4")
+      quarter0 <- paste0(year,'Q1')
+      return(c(
+          quarter, quarter0
+      ))
+    }
+    else if (month>4 && month <=6)
+    {
+      quarter <- paste0(year, "Q1")
+      quarter0 <- paste0(year,'Q2')
+      
+      return(c(
+        quarter, quarter0
+      ))
+    }
+    else if (month>6 && month<=9){
+      quarter <- paste0(year-1, "Q2")
+      quarter0 <- paste0(year,'Q3')
+      
+      return(c(
+        quarter, quarter0
+      ))
+    }
+    else if(month>9 && month<=12){
+      quarter <- paste0(year-1, "Q3")
+      quarter0 <- paste0(year,'Q4')
+      
+      return(c(
+        quarter, quarter0
+      ))
+    }
+  }
+  
   output$ui <- renderUI({
+    #Get Period
+    quarters <- getIsoPeriodActiveQuarters()
     
     if (user_input$authenticated == FALSE) {
       ##### UI code for login page
@@ -91,37 +134,25 @@ shinyServer(function(input, output, session) {
               accept = c(
                 "text/csv",
                 "text/comma-separated-values,text/plain",
-                "application/json",
-                "application/xml",
-                ".csv",
-                ".json",
-                ".xml"
+                ".csv"
               )
             ),
             selectInput("type", "Type:",
                         c(
-                          "CSV" = "csv",
-                          "JSON" = "json",
-                          "XML" = "xml"
-                        )),
+                          "CSV" = "csv"
+                        ),
+                        selected = "csv"
+                        ),
             selectInput("isoPeriod", "Iso Period", 
-                        c(
-                          "2021Q1" = "2021Q1",
-                          "2021Q2" = "2021Q2",
-                          "2021Q3" = "2021Q3",
-                          "2021Q4" = "2021Q4",
-                          "2022Q1" = "2022Q1",
-                          "2022Q2" = "2022Q2",
-                          "2022Q3" = "2022Q3",
-                          "2022Q4" = "2022Q4"
-                        ),
-                        selected = "2021Q4"
-                        ),
+                      quarters,
+                      selected = quarters[2]
+                      ),
             selectInput(
               "de_scheme",
               "Data Element ID scheme:",
               c(
-                "Name" = "name"
+                "Name" = "name",
+                "Code" = "code"
               ),
               selected = "name"
             ),
@@ -129,8 +160,7 @@ shinyServer(function(input, output, session) {
               "ou_scheme",
               "Orgunit ID scheme:",
               c(
-                "ID" = "id",
-                "Code" = "code"
+                "ID" = "id"
               ),
               selected = "id"
             ),
@@ -287,13 +317,6 @@ shinyServer(function(input, output, session) {
     # VALIDATION
     
     # 1. parse input file
-    print(path)
-    print(dataElementIdScheme)
-    print(orgUnitIdScheme)
-    print(idScheme)
-    print(fileHasHeader)
-    print(isoPeriod)
-    print(d2_default_session)
     incProgress(1/14, detail = ("Parsing the data with SIMS parser"))
     # parse using SIMS parser - this parser does period shifting of overlapping SIMS assessments
     d2 <- datimvalidation::sims2Parser(file=path, dataElementIdScheme = dataElementIdScheme, orgUnitIdScheme = orgUnitIdScheme, idScheme = idScheme, invalidData=TRUE, hasHeader=fileHasHeader, isoPeriod=isoPeriod)
@@ -454,32 +477,32 @@ shinyServer(function(input, output, session) {
           validation$invalidOUAssessments <- invalidOUAssessments
         }
         file_summary["invalid org units"] = length(invalidOUs$orgUnit)
-        file_summary["invalid ou assessments"] = length(invalidOUAssessments$orgUnit)
+        file_summary["invalid ou assessments(warning)"] = length(invalidOUAssessments$orgUnit)
         
         messages <- append(paste(length(invalidOUs$orgUnit), " invalid org units"), messages)
-        messages <- append(paste(length(invalidOUAssessments$orgUnit) , " invalid ou assessements"), messages)
+        messages <- append(paste(length(invalidOUAssessments$orgUnit) , " invalid ou assessements(warning)"), messages)
         
         has_error<-TRUE
       } else {
         file_summary["invalid org units"] = 0
-        file_summary["invalid ou assessments"] = 0
+        file_summary["invalid ou assessments(warning)"] = 0
         
         messages <- append(paste( 0, " invalid org units"), messages)
-        messages <- append(paste(0, " invalid ou assessements"), messages)
+        messages <- append(paste(0, " invalid ou assessements(warning)"), messages)
       }
     } else {
       file_summary["invalid org units"] = 0
       file_summary["invalid ou assessments"] = 0
       
       messages <- append(paste(0, " invalid org units"), messages)
-      messages <- append(paste(0, " invalid ou assessements"), messages)
+      messages <- append(paste(0, " invalid ou assessements(warning)"), messages)
     }
     
     #incomplete_assessments <- checkCoverSheetCompleteness(data_dictionary,path)
     # write out validation summary
     write.table(as.data.frame(file_summary), file = paste0(folder, filename, "_summary.txt"))
-    validation$filesummary <-file_summary
-    print(file_summary)
+    validation$filesummary <- cbind(filelabel = rownames(as.data.frame(file_summary)), as.data.frame(file_summary))
+
     # write out normalized data - data has periods shifter for overlapping assessments, and has metadata in UID format. In case of any overlapping assessments in the input file, normalized file should be used for import into DATIM
     write.csv(d2[, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value", "storedby", "timestamp", "comment")], paste0(folder, filename, "_normalized.csv"), row.names=FALSE, na="")
     
@@ -606,11 +629,11 @@ shinyServer(function(input, output, session) {
   )
   
   output$downloadDataNormalized <- downloadHandler(
-    filename = "sims_normalized_results.xlsx",
+    filename = "sims_normalized_results.csv",
     content = function(file) {
       
       vr_normalized <- validation_results() %>% purrr::pluck(.,"normalized")
-      openxlsx::write.xlsx(vr_normalized, file = file)
+      write.csv(vr_normalized$normalizedfile, file = file)
     }
   )
   

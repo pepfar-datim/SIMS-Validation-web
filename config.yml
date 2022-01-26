@@ -1,3 +1,3 @@
 default:
   baseurl: "http://dev-de.datim.org/"
-  log_path: "/Users/bdennis/Documents/ICF/development/Explore/SIMS-Validation-web/datim.log"
+  log_path: "simsvalidationweb.log"

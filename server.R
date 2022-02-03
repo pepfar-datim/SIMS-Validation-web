@@ -5,8 +5,8 @@ library(magrittr)
 require(futile.logger)
 require(shinyWidgets)
 #require(devtools)
-#install_github("pepfar-datim/SIMS-Validation")
-#install_github("pepfar-datim/datim-validation")
+#install_github("pepfar-datim/SIMS-Validation", force = TRUE)
+#install_github("pepfar-datim/datim-validation", force = TRUE)
 require(SIMS4Validation)
 require(datimvalidation)
 
@@ -221,7 +221,7 @@ shinyServer(function(input, output, session) {
                    
                    user_input$authenticated<-TRUE
                    user_input$d2_session<-d2_default_session$clone()
-                   flog.info(paste0("User ", user_input$d2_session$me$userCredentials$username, " logged in."), name = "datapack")
+                   flog.info(paste0("User ", user_input$d2_session$me$userCredentials$username, " logged in."), name = "smiswebvalidation")
                  }
                  
                })
@@ -265,20 +265,10 @@ shinyServer(function(input, output, session) {
     validation<-list()
     normalized<-list()
     
+    #Default authenticated user session
     d2_default_session <-user_input$d2_session
     
-    print(input$importdatafile$datapath)
-    print(input$importdatafile$name)
-    print(input$type)
-    print(input$id_scheme)
-    print(input$de_scheme)
-    print(input$ou_scheme)
-    print(input$isoPeriod)
-    print(input$header)
-    print(d2_default_session)
-    print(dataSets)
-    print(output_dir)
-    #sims
+    #SIMS Validation Checks using SIMS-Validation Package 
     #Bad values check
     incProgress(1/14, detail = ("SIMS Validator"))
     
@@ -319,7 +309,7 @@ shinyServer(function(input, output, session) {
     # 1. parse input file
     incProgress(1/14, detail = ("Parsing the data with SIMS parser"))
     # parse using SIMS parser - this parser does period shifting of overlapping SIMS assessments
-    d2 <- datimvalidation::sims2Parser(file=path, dataElementIdScheme = dataElementIdScheme, orgUnitIdScheme = orgUnitIdScheme, idScheme = idScheme, invalidData=TRUE, hasHeader=fileHasHeader, isoPeriod=isoPeriod)
+    d2 <- datimvalidation::sims2Parser(file=path, dataElementIdScheme = dataElementIdScheme, orgUnitIdScheme = orgUnitIdScheme, idScheme = idScheme, invalidData=TRUE, hasHeader=fileHasHeader, isoPeriod=isoPeriod, d2session = d2_default_session)
     
     file_summary["record count"] = length(d2$comment)
     file_summary["assessment count"] = length(unique(d2$comment))
@@ -363,7 +353,7 @@ shinyServer(function(input, output, session) {
     #    aoc <- jsonlite::fromJSON(r, flatten = TRUE)$name
     #  file_summary[aoc] = assmt_per_aoc[col,2]
     #}
-    mech_map <- getMechanismsMap()
+    mech_map <- getMechanismsMap(d2session = d2_default_session)
     assmt_per_aoc = sqldf::sqldf('select mech_map.code as attributeOptionCombo, count(distinct(d2.comment)) from d2 join mech_map on mech_map.id = d2.attributeOptionCombo group by d2.attributeOptionCombo')
     file_summary["assessment count per mechanism"] = "------"
     for(col in 1:length(assmt_per_aoc$attributeOptionCombo)) {
@@ -389,9 +379,9 @@ shinyServer(function(input, output, session) {
     # identify overlapping assessments, and if any write out details
     overlapping_assessment <- sqldf::sqldf('select period, orgUnit, attributeOptionCombo, count(distinct(storedby)) as assessment_count from d group by period, orgUnit, attributeOptionCombo having count(distinct(storedby)) > 1')
     if(nrow(overlapping_assessment) != 0) {
-      write.csv(overlapping_assessment,file=paste0(folder, filename, "_overlapping_assessment.csv"))
+      #write.csv(overlapping_assessment,file=paste0(folder, filename, "_overlapping_assessment.csv"))
       overlapping_assessment_list <- sqldf::sqldf('select distinct d.period, d.orgUnit, d.attributeOptionCombo, d.storedby from d join overlapping_assessment o on d.period=o.period and d.orgUnit=o.orgUnit and d.attributeOptionCombo = o.attributeOptionCombo')
-      write.csv(overlapping_assessment_list,file=paste0(folder, filename, "_overlapping_assessment_list.csv"))
+      #write.csv(overlapping_assessment_list,file=paste0(folder, filename, "_overlapping_assessment_list.csv"))
       
       validation$overlappingassement <- overlapping_assessment
       validation$overlappingassementlist <- overlapping_assessment_list
@@ -406,7 +396,7 @@ shinyServer(function(input, output, session) {
     d2_unique = sqldf::sqldf('select period, comment from d2 group by period, comment')
     shifts_made = sqldf::sqldf('select comment as assessment, d_unique.period as old_period, d2_unique.period as new_period from d_unique join d2_unique on d_unique.storedby = d2_unique.comment where d_unique.period != d2_unique.period order by old_period')
     if(nrow(shifts_made) != 0) {
-      write.csv(shifts_made,file=paste0(folder, filename, "_shifts_made.csv"))
+      #write.csv(shifts_made,file=paste0(folder, filename, "_shifts_made.csv"))
       validation$shifts_made <- shifts_made
       has_error<-TRUE
     }
@@ -418,8 +408,7 @@ shinyServer(function(input, output, session) {
     post_shift_duplicates <- getExactDuplicates(d2)
     post_shift_duplicates_w_code <- sqldf::sqldf('select de_map.code, post_shift_duplicates.* from  post_shift_duplicates left join de_map on de_map.id = post_shift_duplicates.dataElement order by dataElement, period, orgUnit, attributeOptionCombo')
     if(nrow(post_shift_duplicates_w_code) != 0) {
-      write.csv(post_shift_duplicates_w_code,file=paste0(folder, filename, "_post_shift_duplicates.csv"))
-      
+      #write.csv(post_shift_duplicates_w_code,file=paste0(folder, filename, "_post_shift_duplicates.csv"))
       validation$postshiftduplicates <- post_shift_duplicates_w_code
       has_error<-TRUE
     }
@@ -428,11 +417,11 @@ shinyServer(function(input, output, session) {
     
    incProgress(1/14, detail = ("Checking Invalid Period Mechanisms"))
     # 2. verify mechanism validity
-    mechs <- checkMechanismValidity(d2)
+    mechs <- checkMechanismValidity(d2,d2session = d2_default_session)
     if(any(class(mechs) == "data.frame")){
       if(nrow(mechs) != 0){
         mech2 <- sqldf::sqldf("select mechs.*, m2.comment as assessment_id from mechs join (select distinct period, attributeOptionCombo, comment from d2) m2 on mechs.period = m2.period and mechs.attributeOptionCombo = m2.attributeOptionCombo")
-        write.csv(mech2,file=paste0(folder, filename, "_mechs.csv"))
+        #write.csv(mech2,file=paste0(folder, filename, "_mechs.csv"))
         validation$invalidperiodmechanisms <- mech2
         has_error<-TRUE
       }
@@ -445,10 +434,10 @@ shinyServer(function(input, output, session) {
     
    incProgress(1/14, detail = ("Checking Invalid data value types"))
     # 3. identify invalid data value types
-    bad_data_values <- checkValueTypeCompliance2(d2)
+    bad_data_values <- checkValueTypeCompliance2(d2, d2session = d2_default_session)
     if(any(class(bad_data_values) == "data.frame")){
       if(nrow(bad_data_values) != 0){ 
-        write.csv(bad_data_values,file=paste0(folder, filename, "_bad_data_values.csv"))
+        #write.csv(bad_data_values,file=paste0(folder, filename, "_bad_data_values.csv"))
         validation$bad_data_values <- bad_data_values
         has_error<-TRUE
       }
@@ -470,8 +459,8 @@ shinyServer(function(input, output, session) {
         invalidOUs <- sqldf::sqldf('select distinct orgUnit from invalid_orgunits')
         invalidOUAssessments <- sqldf::sqldf('select comment as assessment_id, period, orgUnit from d2 where orgunit in (select orgUnit from invalidOUs) group by comment, period, orgUnit')
         if(nrow(invalid_orgunits) != 0) {
-          write.csv(invalid_orgunits,file=paste0(folder, filename, "_invalid_orgunits.csv"))
-          write.csv(invalidOUAssessments,file=paste0(folder, filename, "_invalid_orgunit_list.csv"))
+          #write.csv(invalid_orgunits,file=paste0(folder, filename, "_invalid_orgunits.csv"))
+          #write.csv(invalidOUAssessments,file=paste0(folder, filename, "_invalid_orgunit_list.csv"))
           
           validation$invalid_orgunits <- invalid_orgunits
           validation$invalidOUAssessments <- invalidOUAssessments
@@ -500,11 +489,11 @@ shinyServer(function(input, output, session) {
     
     #incomplete_assessments <- checkCoverSheetCompleteness(data_dictionary,path)
     # write out validation summary
-    write.table(as.data.frame(file_summary), file = paste0(folder, filename, "_summary.txt"))
+    #write.table(as.data.frame(file_summary), file = paste0(folder, filename, "_summary.txt"))
     validation$filesummary <- cbind(filelabel = rownames(as.data.frame(file_summary)), as.data.frame(file_summary))
 
     # write out normalized data - data has periods shifter for overlapping assessments, and has metadata in UID format. In case of any overlapping assessments in the input file, normalized file should be used for import into DATIM
-    write.csv(d2[, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value", "storedby", "timestamp", "comment")], paste0(folder, filename, "_normalized.csv"), row.names=FALSE, na="")
+    #write.csv(d2[, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value", "storedby", "timestamp", "comment")], paste0(folder, filename, "_normalized.csv"), row.names=FALSE, na="")
     
     normalized$normalizedfile<-d2[, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value", "storedby", "timestamp", "comment")]
     bad_data_values_result <- NULL
@@ -548,7 +537,7 @@ shinyServer(function(input, output, session) {
      incProgress(1/14, detail = ("Checking Incomplete CS."))
       incomplete_CS <- SIMS4Validation::checkCoverSheetCompleteness(input$importdatafile$datapath,input$header,de_map,user_input$d2_session)
       if(!is.null(incomplete_CS) && nrow(incomplete_CS) != 0) {
-        write.csv(incomplete_CS,file=paste0(output_dir, input$importdatafile$name, "_incomplete_CS.csv"))
+        #write.csv(incomplete_CS,file=paste0(output_dir, input$importdatafile$name, "_incomplete_CS.csv"))
         
         messages <- append(paste(NROW(incomplete_CS), " Incompete CS found"), messages)
         validation$incompletecs <- incomplete_CS
@@ -562,7 +551,7 @@ shinyServer(function(input, output, session) {
      incProgress(1/14, detail = ("Checking Wrong Assessment Type."))
       wrongType <- SIMS4Validation::checkForWrongAssessmentType(input$importdatafile$datapath,input$header,de_map)
       if(!is.null(wrongType) && nrow(wrongType) != 0) {
-        write.csv(wrongType,file=paste0(output_dir, input$importdatafile$name, "_wrongToolType.csv"))
+        #write.csv(wrongType,file=paste0(output_dir, input$importdatafile$name, "_wrongToolType.csv"))
         
         validation$wrongtypeassessments <- wrongType
         messages <- append(paste(NROW(wrongType), " Wrong Type Assessments found"), messages)
@@ -577,7 +566,7 @@ shinyServer(function(input, output, session) {
      incProgress(1/14, detail = ("CEE Validity Check"))
       inValidCEE <- SIMS4Validation::checkForCEEValidity(input$importdatafile$datapath,input$header,de_map,bad_data_values_result)
       if(!is.null(inValidCEE) && nrow(inValidCEE) != 0) {
-        write.csv(inValidCEE,file=paste0(output_dir, input$importdatafile$name, "_inValidCEE.csv"))
+        #write.csv(inValidCEE,file=paste0(output_dir, input$importdatafile$name, "_inValidCEE.csv"))
         
         validation$invalidcee <- inValidCEE
         messages <- append(paste(NROW(inValidCEE), " Invalid CEE found"), messages)

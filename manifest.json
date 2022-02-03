@@ -908,27 +908,68 @@
         "URL": "https://github.com/pepfar-datim/datimutils",
         "BugReports": "https://github.com/pepfar-datim/datimutils",
         "Depends": "R (>= 3.6.0)",
-        "Imports": "dplyr (>= 0.8.3), tidyr (>= 0.8.3), readr (>= 1.3.1), jsonlite\n(>= 1.6), purrr (>= 0.3.2), tibble (>= 2.1.1), stringr (>=\n1.4.0), stringi (>= 1.4.3), httr (>= 1.4.0), rlist (>=\n0.4.6.1), magrittr (>= 1.5), keyring, lazyeval, stats,\nlubridate, data.table, getPass, rlang",
-        "Suggests": "devtools (>= 2.0.1), httptest, knitr, rmarkdown, testthat (>=\n2.1.0)",
+        "Imports": "dplyr (>= 0.8.3),\ntidyr (>= 0.8.3),\nreadr (>= 1.3.1),\njsonlite (>= 1.6),\npurrr (>= 0.3.2),\ntibble (>= 2.1.1),\nstringr (>= 1.4.0),\nstringi (>= 1.4.3),\nhttr (>= 1.4.0),\nrlist (>= 0.4.6.1),\nmagrittr (>= 1.5),\nkeyring,\nlazyeval,\nstats,\nlubridate,\ndata.table,\ngetPass,\nrlang",
+        "Suggests": "devtools (>= 2.0.1),\nhttptest,\nknitr,\nrmarkdown,\ntestthat (>= 2.1.0)",
         "License": "GPL-3 + file LICENSE",
         "Encoding": "UTF-8",
+        "LazyData": "true",
         "RoxygenNote": "7.1.1",
         "VignetteBuilder": "knitr",
+        "Author": "Scott Jackson [aut, cre],\n  Jason Pickering [aut],\n  Sam Garman [aut],\n  Maxwell Chandler [aut]",
+        "Maintainer": "Scott Jackson <sjackson@baosystems.com>",
+        "Built": "R 4.1.1; ; 2022-02-03 15:33:18 UTC; unix",
         "RemoteType": "github",
         "RemoteHost": "api.github.com",
         "RemoteRepo": "datimutils",
         "RemoteUsername": "pepfar-datim",
         "RemoteRef": "HEAD",
         "RemoteSha": "bba00c371ba345865725def8b3b4830943963c5c",
+        "GithubHost": "api.github.com",
         "GithubRepo": "datimutils",
         "GithubUsername": "pepfar-datim",
         "GithubRef": "HEAD",
-        "GithubSHA1": "bba00c371ba345865725def8b3b4830943963c5c",
-        "NeedsCompilation": "no",
-        "Packaged": "2021-11-03 07:15:19 UTC; bdennis",
-        "Author": "Scott Jackson [aut, cre],\n  Jason Pickering [aut],\n  Sam Garman [aut],\n  Maxwell Chandler [aut]",
-        "Maintainer": "Scott Jackson <sjackson@baosystems.com>",
-        "Built": "R 4.1.1; ; 2021-11-03 07:15:21 UTC; unix"
+        "GithubSHA1": "bba00c371ba345865725def8b3b4830943963c5c"
+      }
+    },
+    "datimvalidation": {
+      "Source": "github",
+      "Repository": null,
+      "GithubRepo": "datim-validation",
+      "GithubUsername": "pepfar-datim",
+      "GithubRef": "master",
+      "GithubSha1": "f13778d9eb132d1fca919ed2540fcbeed2dbe815",
+      "description": {
+        "Package": "datimvalidation",
+        "Type": "Package",
+        "Title": "External Validation Routines for Data Payloads in DATIM",
+        "Version": "1.1.2",
+        "Date": "2021-04-27",
+        "Author": "Jason P. Pickering",
+        "Maintainer": "Jason P. Pickering <jason.p.pickering@gmail.com>",
+        "Description": "A comprehensive set of tools to validate data payloads\n        intended for import into 'DATIM' <https://www.datim.org/>.\n        DATIM is the 'PEPFAR' <https://www.state.gov/pepfar/> specific\n        instance of 'DHIS2' <https://www.dhis2.org/>. These scripts are\n        provided for the 'PEPFAR' data exchange community in order to\n        validate their prospective data payloads prior to submission\n        for import.",
+        "License": "BSD_3_clause + file LICENSE",
+        "SystemRequirements": "Active user account on 'DATIM'\n<https://www.datim.org/>",
+        "URL": "https://github.com/jason-p-pickering/datim-validation",
+        "BugReports": "https://github.com/jason-p-pickering/datim-validation/issues",
+        "Encoding": "UTF-8",
+        "Depends": "R (>= 3.6)",
+        "Imports": "xml2 (>= 1.3.2), plyr (>= 1.8.4), jsonlite (>= 1.6), stringr\n(>= 1.4.0), httr (>= 1.4.0), digest (>= 0.6.18), reshape2 (>=\n1.4.3), assertthat (>= 0.2.0), rlist (>= 0.4.6.1), ISOweek (>=\n0.6-2), lubridate (>= 1.7.4), getPass (>= 0.2-2), purrr (>=\n0.3.2), dplyr (>= 0.8.3), R6 (>= 2.4.1), datimutils (>= 0.1.0)",
+        "Suggests": "doMC (>= 1.3.5), foreach (>= 1.4.4), httptest (>= 3.2.2),\nknitr (>= 1.21), methods, rmarkdown (>= 1.11), roxygen2 (>=\n6.1.1), tcltk, testthat (>= 2.0.1), covr (>= 3.2.1), stringi\n(>= 1.3.1), rprojroot (>= 1.3-2)",
+        "VignetteBuilder": "knitr",
+        "RoxygenNote": "7.1.1",
+        "Built": "R 4.1.1; ; 2022-02-03 09:30:57 UTC; unix",
+        "RemoteType": "github",
+        "RemoteHost": "api.github.com",
+        "RemoteUsername": "pepfar-datim",
+        "RemoteRepo": "datim-validation",
+        "RemoteRef": "master",
+        "RemoteSha": "f13778d9eb132d1fca919ed2540fcbeed2dbe815",
+        "GithubHost": "api.github.com",
+        "GithubRepo": "datim-validation",
+        "GithubUsername": "pepfar-datim",
+        "GithubRef": "master",
+        "GithubSHA1": "f13778d9eb132d1fca919ed2540fcbeed2dbe815",
+        "Remotes": "pepfar-datim/datimutils"
       }
     },
     "desc": {
@@ -1425,7 +1466,7 @@
         "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
         "Repository": "CRAN",
         "Date/Publication": "2022-01-31 23:30:02 UTC",
-        "Built": "R 4.1.1; ; 2022-02-01 07:48:39 UTC; unix"
+        "Built": "R 4.1.2; ; 2022-02-01 12:15:36 UTC; unix"
       }
     },
     "gert": {
@@ -4034,7 +4075,7 @@
       "checksum": "9569e8b1df9ca1e591874bfbee64ec7d"
     },
     ".Rprofile": {
-      "checksum": "6fbe9944282b3b98dd1a735158d78fe0"
+      "checksum": "1b2a22b53e1ac6134966e80efc247367"
     },
     "config.yml": {
       "checksum": "a68f9768690af85ae3e9e65ac80083dd"
@@ -4049,10 +4090,10 @@
       "checksum": "8b672777177539df661c55a4d8ef4e7c"
     },
     "server.R": {
-      "checksum": "f85a8717cd14eacd86d8956eacf38e37"
+      "checksum": "73d3061d0ca7130b62b21a04664d2f91"
     },
     "simsvalidationweb.log": {
-      "checksum": "ac23add8e0d862af5c264518d4b0634b"
+      "checksum": "2f63ceadc9f6b9548238da5501ddb827"
     },
     "ui.R": {
       "checksum": "10fff370fd41bab3c1d5a247e16071f5"

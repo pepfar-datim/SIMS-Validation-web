@@ -935,9 +935,9 @@
       "Source": "github",
       "Repository": null,
       "GithubRepo": "datim-validation",
-      "GithubUsername": "pepfar-datim",
+      "GithubUsername": "bangadennis",
       "GithubRef": "master",
-      "GithubSha1": "f13778d9eb132d1fca919ed2540fcbeed2dbe815",
+      "GithubSha1": "0cebf8e6c100bbbea29cc8a3badefccefbf70a7c",
       "description": {
         "Package": "datimvalidation",
         "Type": "Package",
@@ -957,18 +957,18 @@
         "Suggests": "doMC (>= 1.3.5), foreach (>= 1.4.4), httptest (>= 3.2.2),\nknitr (>= 1.21), methods, rmarkdown (>= 1.11), roxygen2 (>=\n6.1.1), tcltk, testthat (>= 2.0.1), covr (>= 3.2.1), stringi\n(>= 1.3.1), rprojroot (>= 1.3-2)",
         "VignetteBuilder": "knitr",
         "RoxygenNote": "7.1.1",
-        "Built": "R 4.1.1; ; 2022-02-03 09:30:57 UTC; unix",
+        "Built": "R 4.1.1; ; 2022-02-04 08:37:15 UTC; unix",
         "RemoteType": "github",
         "RemoteHost": "api.github.com",
-        "RemoteUsername": "pepfar-datim",
+        "RemoteUsername": "bangadennis",
         "RemoteRepo": "datim-validation",
         "RemoteRef": "master",
-        "RemoteSha": "f13778d9eb132d1fca919ed2540fcbeed2dbe815",
+        "RemoteSha": "0cebf8e6c100bbbea29cc8a3badefccefbf70a7c",
         "GithubHost": "api.github.com",
         "GithubRepo": "datim-validation",
-        "GithubUsername": "pepfar-datim",
+        "GithubUsername": "bangadennis",
         "GithubRef": "master",
-        "GithubSHA1": "f13778d9eb132d1fca919ed2540fcbeed2dbe815",
+        "GithubSHA1": "0cebf8e6c100bbbea29cc8a3badefccefbf70a7c",
         "Remotes": "pepfar-datim/datimutils"
       }
     },
@@ -2293,7 +2293,7 @@
       "description": {
         "Package": "pillar",
         "Title": "Coloured Formatting for Columns",
-        "Version": "1.6.5",
+        "Version": "1.7.0",
         "Authors@R": "\n    c(person(given = \"Kirill\",\n             family = \"M\\u00fcller\",\n             role = c(\"aut\", \"cre\"),\n             email = \"krlmlr+r@mailbox.org\"),\n      person(given = \"Hadley\",\n             family = \"Wickham\",\n             role = \"aut\"),\n      person(given = \"RStudio\",\n             role = \"cph\"))",
         "Description": "Provides 'pillar' and 'colonnade' generics designed\n    for formatting columns of data using the full range of colours\n    provided by modern terminals.",
         "License": "MIT + file LICENSE",
@@ -2311,12 +2311,12 @@
         "Config/autostyle/strict": "true",
         "Config/gha/extra-packages": "DiagrammeR=?ignore-before-r=3.5.0",
         "NeedsCompilation": "no",
-        "Packaged": "2022-01-25 13:10:20 UTC; kirill",
+        "Packaged": "2022-02-01 07:58:34 UTC; kirill",
         "Author": "Kirill Müller [aut, cre],\n  Hadley Wickham [aut],\n  RStudio [cph]",
         "Maintainer": "Kirill Müller <krlmlr+r@mailbox.org>",
         "Repository": "CRAN",
-        "Date/Publication": "2022-01-25 14:42:42 UTC",
-        "Built": "R 4.1.2; ; 2022-01-26 12:08:42 UTC; unix"
+        "Date/Publication": "2022-02-01 08:30:02 UTC",
+        "Built": "R 4.1.1; ; 2022-02-02 17:58:24 UTC; unix"
       }
     },
     "pkgbuild": {
@@ -4075,13 +4075,10 @@
       "checksum": "9569e8b1df9ca1e591874bfbee64ec7d"
     },
     ".Rprofile": {
-      "checksum": "1b2a22b53e1ac6134966e80efc247367"
+      "checksum": "c47765cf5eac2cd277a5437c65891bff"
     },
     "config.yml": {
       "checksum": "a68f9768690af85ae3e9e65ac80083dd"
-    },
-    "datim.log": {
-      "checksum": "8092cff164be6eaeba1506e11e0c33f0"
     },
     "LICENSE": {
       "checksum": "a1cb1527cdb01349210032d39245c23e"
@@ -4090,10 +4087,10 @@
       "checksum": "8b672777177539df661c55a4d8ef4e7c"
     },
     "server.R": {
-      "checksum": "73d3061d0ca7130b62b21a04664d2f91"
+      "checksum": "75dc382eebc3e4c5b29d9027068d190f"
     },
     "simsvalidationweb.log": {
-      "checksum": "2f63ceadc9f6b9548238da5501ddb827"
+      "checksum": "f8d165180c7dc5e5dfb71d5b7db903ac"
     },
     "ui.R": {
       "checksum": "10fff370fd41bab3c1d5a247e16071f5"

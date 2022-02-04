@@ -270,7 +270,7 @@ shinyServer(function(input, output, session) {
     
     #SIMS Validation Checks using SIMS-Validation Package 
     #Bad values check
-    incProgress(1/14, detail = ("SIMS Validator"))
+    incProgress(1/14, detail = ("Starting SIMS Validator Process"))
     
     #Variables 
     folder<-output_dir
@@ -379,13 +379,10 @@ shinyServer(function(input, output, session) {
     # identify overlapping assessments, and if any write out details
     overlapping_assessment <- sqldf::sqldf('select period, orgUnit, attributeOptionCombo, count(distinct(storedby)) as assessment_count from d group by period, orgUnit, attributeOptionCombo having count(distinct(storedby)) > 1')
     if(nrow(overlapping_assessment) != 0) {
-      #write.csv(overlapping_assessment,file=paste0(folder, filename, "_overlapping_assessment.csv"))
       overlapping_assessment_list <- sqldf::sqldf('select distinct d.period, d.orgUnit, d.attributeOptionCombo, d.storedby from d join overlapping_assessment o on d.period=o.period and d.orgUnit=o.orgUnit and d.attributeOptionCombo = o.attributeOptionCombo')
-      #write.csv(overlapping_assessment_list,file=paste0(folder, filename, "_overlapping_assessment_list.csv"))
       
       validation$overlappingassement <- overlapping_assessment
       validation$overlappingassementlist <- overlapping_assessment_list
-      has_error<-TRUE
     }
     file_summary["overlapping PE/OU/IM count"] = length(overlapping_assessment$period)
     messages <- append(paste( length(overlapping_assessment$period), " overlapping PE/OU/IM count"), messages)
@@ -396,9 +393,7 @@ shinyServer(function(input, output, session) {
     d2_unique = sqldf::sqldf('select period, comment from d2 group by period, comment')
     shifts_made = sqldf::sqldf('select comment as assessment, d_unique.period as old_period, d2_unique.period as new_period from d_unique join d2_unique on d_unique.storedby = d2_unique.comment where d_unique.period != d2_unique.period order by old_period')
     if(nrow(shifts_made) != 0) {
-      #write.csv(shifts_made,file=paste0(folder, filename, "_shifts_made.csv"))
       validation$shifts_made <- shifts_made
-      has_error<-TRUE
     }
     file_summary["shifted_assessment_count"] = nrow(shifts_made)
     messages <- append(paste(nrow(shifts_made), " shifted assessment count"), messages)
@@ -408,9 +403,7 @@ shinyServer(function(input, output, session) {
     post_shift_duplicates <- getExactDuplicates(d2)
     post_shift_duplicates_w_code <- sqldf::sqldf('select de_map.code, post_shift_duplicates.* from  post_shift_duplicates left join de_map on de_map.id = post_shift_duplicates.dataElement order by dataElement, period, orgUnit, attributeOptionCombo')
     if(nrow(post_shift_duplicates_w_code) != 0) {
-      #write.csv(post_shift_duplicates_w_code,file=paste0(folder, filename, "_post_shift_duplicates.csv"))
       validation$postshiftduplicates <- post_shift_duplicates_w_code
-      has_error<-TRUE
     }
     file_summary["post shift duplicate count"] = length(post_shift_duplicates_w_code$comment)
     messages <- append(paste(length(post_shift_duplicates_w_code$comment), " post shift duplicate count"), messages)
@@ -421,9 +414,7 @@ shinyServer(function(input, output, session) {
     if(any(class(mechs) == "data.frame")){
       if(nrow(mechs) != 0){
         mech2 <- sqldf::sqldf("select mechs.*, m2.comment as assessment_id from mechs join (select distinct period, attributeOptionCombo, comment from d2) m2 on mechs.period = m2.period and mechs.attributeOptionCombo = m2.attributeOptionCombo")
-        #write.csv(mech2,file=paste0(folder, filename, "_mechs.csv"))
         validation$invalidperiodmechanisms <- mech2
-        has_error<-TRUE
       }
       file_summary["invalid period mechanisms"] = length(mechs$attributeOptionCombo)
       messages <- append(paste(length(mechs$attributeOptionCombo), " invalid period mechanisms"), messages)
@@ -437,9 +428,7 @@ shinyServer(function(input, output, session) {
     bad_data_values <- checkValueTypeCompliance2(d2, d2session = d2_default_session)
     if(any(class(bad_data_values) == "data.frame")){
       if(nrow(bad_data_values) != 0){ 
-        #write.csv(bad_data_values,file=paste0(folder, filename, "_bad_data_values.csv"))
         validation$bad_data_values <- bad_data_values
-        has_error<-TRUE
       }
       file_summary["bad data values"] = length(bad_data_values$dataElement)
       messages <- append(paste(length(bad_data_values$dataElement), " bad data values"), messages)
@@ -453,15 +442,9 @@ shinyServer(function(input, output, session) {
     invalid_orgunits <- checkDataElementOrgunitValidity(data=d2, datasets=dataSets, d2session = d2_default_session)
     if(any(class(invalid_orgunits) == "data.frame")){
       if(nrow(invalid_orgunits) > 0){
-        #      print("Invalid data element/org unit pairs encountered. Printing out summaries.")
-        #      write.csv(invalid_orgunits, paste0(folder, filename, '_invalid_de_ou.csv'), na="")
-        
         invalidOUs <- sqldf::sqldf('select distinct orgUnit from invalid_orgunits')
         invalidOUAssessments <- sqldf::sqldf('select comment as assessment_id, period, orgUnit from d2 where orgunit in (select orgUnit from invalidOUs) group by comment, period, orgUnit')
         if(nrow(invalid_orgunits) != 0) {
-          #write.csv(invalid_orgunits,file=paste0(folder, filename, "_invalid_orgunits.csv"))
-          #write.csv(invalidOUAssessments,file=paste0(folder, filename, "_invalid_orgunit_list.csv"))
-          
           validation$invalid_orgunits <- invalid_orgunits
           validation$invalidOUAssessments <- invalidOUAssessments
         }
@@ -471,7 +454,6 @@ shinyServer(function(input, output, session) {
         messages <- append(paste(length(invalidOUs$orgUnit), " invalid org units"), messages)
         messages <- append(paste(length(invalidOUAssessments$orgUnit) , " invalid ou assessements(warning)"), messages)
         
-        has_error<-TRUE
       } else {
         file_summary["invalid org units"] = 0
         file_summary["invalid ou assessments(warning)"] = 0
@@ -489,13 +471,11 @@ shinyServer(function(input, output, session) {
     
     #incomplete_assessments <- checkCoverSheetCompleteness(data_dictionary,path)
     # write out validation summary
-    #write.table(as.data.frame(file_summary), file = paste0(folder, filename, "_summary.txt"))
     validation$filesummary <- cbind(filelabel = rownames(as.data.frame(file_summary)), as.data.frame(file_summary))
 
     # write out normalized data - data has periods shifter for overlapping assessments, and has metadata in UID format. In case of any overlapping assessments in the input file, normalized file should be used for import into DATIM
-    #write.csv(d2[, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value", "storedby", "timestamp", "comment")], paste0(folder, filename, "_normalized.csv"), row.names=FALSE, na="")
-    
     normalized$normalizedfile<-d2[, c("dataElement","period","orgUnit","categoryOptionCombo","attributeOptionCombo","value", "storedby", "timestamp", "comment")]
+    
     bad_data_values_result <- NULL
     # to use in CEE validity check
     if(any(class(bad_data_values) == "data.frame")){
@@ -504,15 +484,12 @@ shinyServer(function(input, output, session) {
           
           #validation$baddatavalues <- bad_data_values
           bad_data_values_result <- bad_data_values
-          has_error<-TRUE
       }
       else{
         bad_data_values_result <- NULL
         #messages<-append("No bad values found",messages)
       }
     } 
-    
-    has_error<-TRUE
     
     dcatch <-  tryCatch({
       #if dataElementIdScheme is id, construct map of data element ID and name
@@ -533,15 +510,12 @@ shinyServer(function(input, output, session) {
         }
       }
       
-      #CS check
+      #Coversheet check
      incProgress(1/14, detail = ("Checking Incomplete CS."))
       incomplete_CS <- SIMS4Validation::checkCoverSheetCompleteness(input$importdatafile$datapath,input$header,de_map,user_input$d2_session)
       if(!is.null(incomplete_CS) && nrow(incomplete_CS) != 0) {
-        #write.csv(incomplete_CS,file=paste0(output_dir, input$importdatafile$name, "_incomplete_CS.csv"))
-        
         messages <- append(paste(NROW(incomplete_CS), " Incompete CS found"), messages)
         validation$incompletecs <- incomplete_CS
-        has_error<-TRUE
       }
       else{
         messages<-append("0 Incomplete CS found",messages)
@@ -551,11 +525,8 @@ shinyServer(function(input, output, session) {
      incProgress(1/14, detail = ("Checking Wrong Assessment Type."))
       wrongType <- SIMS4Validation::checkForWrongAssessmentType(input$importdatafile$datapath,input$header,de_map)
       if(!is.null(wrongType) && nrow(wrongType) != 0) {
-        #write.csv(wrongType,file=paste0(output_dir, input$importdatafile$name, "_wrongToolType.csv"))
-        
         validation$wrongtypeassessments <- wrongType
         messages <- append(paste(NROW(wrongType), " Wrong Type Assessments found"), messages)
-        has_error<-TRUE
       }
       else
       {
@@ -566,8 +537,6 @@ shinyServer(function(input, output, session) {
      incProgress(1/14, detail = ("CEE Validity Check"))
       inValidCEE <- SIMS4Validation::checkForCEEValidity(input$importdatafile$datapath,input$header,de_map,bad_data_values_result)
       if(!is.null(inValidCEE) && nrow(inValidCEE) != 0) {
-        #write.csv(inValidCEE,file=paste0(output_dir, input$importdatafile$name, "_inValidCEE.csv"))
-        
         validation$invalidcee <- inValidCEE
         messages <- append(paste(NROW(inValidCEE), " Invalid CEE found"), messages)
       }
@@ -585,17 +554,15 @@ shinyServer(function(input, output, session) {
       list(paste("Escalated warning to error: ", conditionMessage(w)))
     })
 
-      #Reset the button to force upload again
+    #Reset the button to force upload again
       shinyjs::reset("importdatafile")
       disableUI()
       
       #if (inherits(dcatch, "list")) {
-      #  messages <- append( "ERROR! : There were errors while parsing the file. Please check that you have provided the correct paramaters!", messages)
-      #  messages <- append( d, messages)
-      #  return(NULL)
-      #  has_error<-TRUE
-      #}
-      
+       #  messages <- append( "ERROR! : There were errors while parsing the file. Please check that you have provided the correct paramaters!", messages)
+      #   messages <- append( d, messages)
+      #   return(NULL)
+      # }
     
     })
     
@@ -603,7 +570,7 @@ shinyServer(function(input, output, session) {
     shinyjs::show("downloadDataValidation")
     shinyjs::show("downloadDataNormalized")
     
-    list(data=d,messages=messages,validation=validation,normalized=normalized,has_error=has_error)
+    list(data=d,messages=messages,validation=validation,normalized=normalized,has_error=has_error, filename=filename)
   }
   
   validation_results <- reactive({ validate() })
@@ -611,16 +578,14 @@ shinyServer(function(input, output, session) {
   output$downloadDataValidation <- downloadHandler(
     filename = "sims_validation_results.xlsx",
     content = function(file) {
-      
       vr_results <- validation_results() %>% purrr::pluck(.,"validation")
       openxlsx::write.xlsx(vr_results, file = file)
     }
   )
   
   output$downloadDataNormalized <- downloadHandler(
-    filename = "sims_normalized_results.csv",
+    filename = "sims_normalized_data.csv",
     content = function(file) {
-      
       vr_normalized <- validation_results() %>% purrr::pluck(.,"normalized")
       write.csv(vr_normalized$normalizedfile, file = file)
     }
@@ -644,8 +609,6 @@ shinyServer(function(input, output, session) {
       
       messages<-vr %>%   
         purrr::pluck(., "messages")
-      
-      print(messages)
       
       if (!is.null(messages))  {
         lapply(messages, function(x)

@@ -75,7 +75,7 @@ shinyServer(function(input, output, session) {
           quarter, quarter0
       ))
     }
-    else if (month>4 && month <=6)
+    else if (month>=4 && month <=6)
     {
       quarter <- paste0(year, "Q1")
       quarter0 <- paste0(year,'Q2')
@@ -84,7 +84,7 @@ shinyServer(function(input, output, session) {
         quarter, quarter0
       ))
     }
-    else if (month>6 && month<=9){
+    else if (month>=6 && month<=9){
       quarter <- paste0(year-1, "Q2")
       quarter0 <- paste0(year,'Q3')
       
@@ -92,7 +92,7 @@ shinyServer(function(input, output, session) {
         quarter, quarter0
       ))
     }
-    else if(month>9 && month<=12){
+    else if(month>=9 && month<=12){
       quarter <- paste0(year-1, "Q3")
       quarter0 <- paste0(year,'Q4')
       
